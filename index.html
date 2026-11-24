@@ -1,0 +1,2077 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#22c55e" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="description" content="Juego educativo PWA para niños de 5 a 7 años para aprender conteo y números con un mono divertido." />
+  <title>🐵 El Mono Come Bananas</title>
+
+  <!-- Fuente amigable y redondeada para lectura infantil -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    :root {
+      --bg-sky-top: #38bdf8;
+      --bg-sky-bottom: #bae6fd;
+      --bg-hill-1: #4ade80;
+      --bg-hill-2: #22c55e;
+      --bg-ground: #16a34a;
+      --card-bg: rgba(255, 255, 255, 0.92);
+      --card-border: #fde047;
+      --text-main: #1e293b;
+      --text-muted: #475569;
+    }
+
+    body.dark-jungle {
+      --bg-sky-top: #0f172a;
+      --bg-sky-bottom: #1e1b4b;
+      --bg-hill-1: #14532d;
+      --bg-hill-2: #064e3b;
+      --bg-ground: #022c22;
+      --card-bg: rgba(30, 41, 59, 0.92);
+      --card-border: #fbbf24;
+      --text-main: #f8fafc;
+      --text-muted: #cbd5e1;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      min-height: 100dvh;
+      font-family: 'Fredoka', sans-serif;
+      color: var(--text-main);
+      overflow-x: hidden;
+      background: linear-gradient(180deg, var(--bg-sky-top) 0%, var(--bg-sky-bottom) 65%, var(--bg-ground) 100%);
+      transition: background 0.6s ease, color 0.3s ease;
+    }
+
+    /* Botones estilo videojuego 3D táctil */
+    .btn-game {
+      transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.12s ease, filter 0.15s ease;
+      box-shadow: 0 6px 0 rgba(0, 0, 0, 0.22), 0 10px 18px rgba(0, 0, 0, 0.14);
+      cursor: pointer;
+    }
+    .btn-game:hover {
+      filter: brightness(1.05);
+      transform: translateY(-2px);
+    }
+    .btn-game:active {
+      transform: translateY(4px) scale(0.97);
+      box-shadow: 0 2px 0 rgba(0, 0, 0, 0.22), 0 4px 8px rgba(0, 0, 0, 0.12);
+    }
+
+    /* Animaciones del Mono a 60 FPS (GPU accelerated) */
+    @keyframes monkeyIdle {
+      0%, 100% { transform: translateY(0) scaleY(1) scaleX(1); }
+      50% { transform: translateY(-6px) scaleY(1.03) scaleX(0.98); }
+    }
+    @keyframes monkeyHappy {
+      0%, 100% { transform: translateY(0) rotate(0deg) scale(1); }
+      25% { transform: translateY(-26px) rotate(-6deg) scale(1.08); }
+      50% { transform: translateY(0) rotate(0deg) scale(0.95, 1.05); }
+      75% { transform: translateY(-22px) rotate(6deg) scale(1.08); }
+    }
+    @keyframes monkeyEat {
+      0%, 100% { transform: scale(1, 1); }
+      25% { transform: scale(1.08, 0.93); }
+      50% { transform: scale(0.95, 1.07); }
+      75% { transform: scale(1.06, 0.95); }
+    }
+    @keyframes monkeyConfused {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(-9deg) translateX(-4px); }
+      75% { transform: rotate(9deg) translateX(4px); }
+    }
+    @keyframes armWaveLeft {
+      0%, 100% { transform: rotate(0deg); }
+      50% { transform: rotate(-38deg); }
+    }
+    @keyframes armWaveRight {
+      0%, 100% { transform: rotate(0deg); }
+      50% { transform: rotate(38deg); }
+    }
+    @keyframes armRubBelly {
+      0%, 100% { transform: rotate(15deg) translate(4px, 4px); }
+      50% { transform: rotate(35deg) translate(12px, -2px); }
+    }
+    @keyframes petBounce {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-10px) rotate(4deg); }
+    }
+    @keyframes petCelebrate {
+      0%, 100% { transform: translateY(0) rotate(0deg) scale(1); }
+      30% { transform: translateY(-24px) rotate(-15deg) scale(1.15); }
+      70% { transform: translateY(-20px) rotate(15deg) scale(1.15); }
+    }
+    @keyframes bananaPop {
+      0% { transform: scale(0) rotate(-25deg); opacity: 0; }
+      70% { transform: scale(1.15) rotate(8deg); opacity: 1; }
+      100% { transform: scale(1) rotate(0deg); opacity: 1; }
+    }
+    @keyframes bananaCountHighlight {
+      0%, 100% { transform: scale(1); filter: drop-shadow(0 4px 6px rgba(0,0,0,0.18)); }
+      50% { transform: scale(1.38) translateY(-12px) rotate(12deg); filter: drop-shadow(0 0 18px #fde047); }
+    }
+    @keyframes floatSlow {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-8px); }
+    }
+    @keyframes fireflyGlow {
+      0%, 100% { opacity: 0.2; transform: scale(0.8); }
+      50% { opacity: 0.95; transform: scale(1.3); }
+    }
+    @keyframes chestShake {
+      0%, 100% { transform: rotate(0deg) scale(1); }
+      20% { transform: rotate(-10deg) scale(1.06); }
+      40% { transform: rotate(10deg) scale(1.06); }
+      60% { transform: rotate(-8deg) scale(1.08); }
+      80% { transform: rotate(8deg) scale(1.08); }
+    }
+
+    .anim-monkey-idle { animation: monkeyIdle 2.2s ease-in-out infinite; transform-origin: bottom center; }
+    .anim-monkey-happy { animation: monkeyHappy 0.75s ease-in-out infinite; transform-origin: bottom center; }
+    .anim-monkey-eat { animation: monkeyEat 0.42s ease-in-out infinite; transform-origin: bottom center; }
+    .anim-monkey-confused { animation: monkeyConfused 0.9s ease-in-out 2; transform-origin: bottom center; }
+
+    .anim-monkey-happy .monkey-arm-l { animation: armWaveLeft 0.38s ease-in-out infinite; transform-origin: 68px 132px; }
+    .anim-monkey-happy .monkey-arm-r { animation: armWaveRight 0.38s ease-in-out infinite; transform-origin: 152px 132px; }
+    .anim-monkey-idle .monkey-arm-r { animation: armRubBelly 1.6s ease-in-out infinite; transform-origin: 152px 132px; }
+
+    .anim-pet-idle { animation: petBounce 1.8s ease-in-out infinite; transform-origin: bottom center; }
+    .anim-pet-happy { animation: petCelebrate 0.6s ease-in-out infinite; transform-origin: bottom center; }
+
+    .banana-item {
+      animation: bananaPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+      transition: transform 0.15s ease;
+      touch-action: none;
+    }
+    .banana-item:hover {
+      transform: scale(1.12) rotate(6deg);
+    }
+    .banana-counting {
+      animation: bananaCountHighlight 0.65s ease-in-out !important;
+      z-index: 30;
+    }
+
+    .chest-shake { animation: chestShake 0.8s ease-in-out infinite; }
+    .float-slow { animation: floatSlow 3s ease-in-out infinite; }
+
+    /* Canvas de efectos (confeti y lluvia de bananas) */
+    #fxCanvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 60;
+    }
+
+    /* Zona de drop brillante */
+    .drop-zone-active {
+      box-shadow: 0 0 0 6px #fde047, 0 0 32px rgba(250, 204, 21, 0.85) !important;
+      transform: scale(1.03);
+    }
+
+    /* Scrollbar amigable */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-thumb { background: rgba(245, 158, 11, 0.6); border-radius: 9999px; }
+  </style>
+</head>
+<body class="flex flex-col justify-between selection:bg-yellow-300">
+
+  <!-- Canvas de Partículas (Confeti y Lluvia de Bananas) -->
+  <canvas id="fxCanvas"></canvas>
+
+  <!-- Fondo Decorativo de Selva Vectorial (Día / Noche) -->
+  <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+    <!-- Sol o Luna -->
+    <div id="skyOrb" class="absolute top-6 right-8 w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-yellow-300 shadow-[0_0_50px_#fde047] transition-all duration-700"></div>
+
+    <!-- Nubes suaves -->
+    <svg class="absolute top-12 left-6 w-32 sm:w-44 opacity-80 float-slow" viewBox="0 0 200 80">
+      <path d="M35 65 H165 A25 25 0 0 0 160 16 A35 35 0 0 0 95 12 A28 28 0 0 0 42 25 A22 22 0 0 0 35 65 Z" fill="#ffffff"/>
+    </svg>
+    <svg class="absolute top-24 right-1/4 w-28 sm:w-36 opacity-70 float-slow" style="animation-delay: 1.4s;" viewBox="0 0 200 80">
+      <path d="M35 65 H165 A25 25 0 0 0 160 16 A35 35 0 0 0 95 12 A28 28 0 0 0 42 25 A22 22 0 0 0 35 65 Z" fill="#ffffff"/>
+    </svg>
+
+    <!-- Luciérnagas (visibles en modo noche) -->
+    <div id="firefliesLayer" class="hidden"></div>
+
+    <!-- Colinas y Hojas de Selva -->
+    <svg class="absolute bottom-0 left-0 w-full h-44 sm:h-60" preserveAspectRatio="none" viewBox="0 0 1440 320">
+      <path fill="var(--bg-hill-1)" d="M0,192L80,186.7C160,181,320,171,480,181.3C640,192,800,224,960,218.7C1120,213,1280,171,1360,149.3L1440,128L1440,320L0,320Z"></path>
+      <path fill="var(--bg-hill-2)" d="M0,224L120,240C240,256,480,288,720,277.3C960,267,1200,213,1320,186.7L1440,160L1440,320L0,320Z"></path>
+    </svg>
+  </div>
+
+  <!-- BARRA SUPERIOR DE PROGRESO Y CONTROLES -->
+  <header class="relative z-20 w-full max-w-6xl mx-auto px-3 pt-3 pb-1 flex flex-wrap items-center justify-between gap-2">
+    <!-- Identidad y Racha -->
+    <div class="flex items-center gap-2">
+      <button onclick="navigateTo('menu')" class="btn-game bg-amber-400 hover:bg-amber-300 text-amber-950 font-bold px-3.5 py-2 rounded-2xl border-2 border-amber-200 flex items-center gap-1.5 text-base sm:text-lg" title="Volver al Inicio">
+        <span>🏠</span>
+        <span class="hidden sm:inline">Inicio</span>
+      </button>
+
+      <!-- Racha Diaria -->
+      <div class="bg-white/90 dark:bg-slate-800/90 px-3 py-1.5 rounded-2xl border-2 border-orange-400 flex items-center gap-1.5 shadow-sm" title="Racha diaria de juego">
+        <span class="text-xl">🔥</span>
+        <span id="streakDisplay" class="font-bold text-orange-600 text-base sm:text-lg">1</span>
+      </div>
+    </div>
+
+    <!-- Barra de Progreso hacia Cofre Sorpresa -->
+    <div class="order-3 md:order-2 w-full md:w-auto flex-1 max-w-md bg-white/90 dark:bg-slate-800/90 px-3 py-1.5 rounded-2xl border-2 border-yellow-400 shadow-sm flex items-center gap-2.5">
+      <span class="text-xl" id="chestMiniIcon">🎁</span>
+      <div class="flex-1 h-4 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden p-0.5">
+        <div id="chestProgressBar" class="h-full bg-gradient-to-r from-amber-400 via-yellow-400 to-lime-500 rounded-full transition-all duration-500" style="width: 0%"></div>
+      </div>
+      <span id="chestProgressText" class="text-xs sm:text-sm font-bold text-amber-700 dark:text-amber-300 whitespace-nowrap">0/5</span>
+    </div>
+
+    <!-- Monedas, Estrellas y Controles Rápidos -->
+    <div class="order-2 md:order-3 flex items-center gap-1.5 sm:gap-2">
+      <!-- Bananacoins -->
+      <div class="bg-yellow-300 text-yellow-950 px-3 py-1.5 rounded-2xl border-2 border-yellow-500 flex items-center gap-1.5 font-bold shadow-sm">
+        <span class="text-lg sm:text-xl">🍌</span>
+        <span id="coinsDisplay" class="text-base sm:text-lg">0</span>
+      </div>
+
+      <!-- Estrellas -->
+      <div class="bg-sky-200 text-sky-950 px-3 py-1.5 rounded-2xl border-2 border-sky-400 flex items-center gap-1 font-bold shadow-sm">
+        <span class="text-lg sm:text-xl">⭐</span>
+        <span id="starsDisplay" class="text-base sm:text-lg">0</span>
+      </div>
+
+      <!-- Botón Voz -->
+      <button id="btnVoiceToggle" onclick="toggleVoice()" class="btn-game bg-emerald-500 text-white p-2.5 rounded-2xl border-2 border-emerald-200 text-lg" title="Activar o silenciar voz">
+        🔊
+      </button>
+
+      <!-- Botón Modo Oscuro / Día -->
+      <button id="btnThemeToggle" onclick="toggleTheme()" class="btn-game bg-indigo-500 text-white p-2.5 rounded-2xl border-2 border-indigo-200 text-lg" title="Cambiar entre Selva de Día y Selva Nocturna">
+        🌙
+      </button>
+
+      <!-- Botón Pantalla Completa -->
+      <button onclick="toggleFullScreen()" class="btn-game bg-purple-500 text-white p-2.5 rounded-2xl border-2 border-purple-200 text-lg hidden sm:flex" title="Pantalla Completa">
+        ⛶
+      </button>
+    </div>
+  </header>
+
+  <!-- CONTENEDOR PRINCIPAL DINÁMICO -->
+  <main class="relative z-10 flex-1 w-full max-w-6xl mx-auto px-3 py-2 flex flex-col justify-center">
+
+    <!-- ==================== VISTA 1: MENÚ PRINCIPAL ==================== -->
+    <section id="view-menu" class="flex flex-col items-center gap-4 sm:gap-5 py-2">
+      <!-- Título Cartoon -->
+      <div class="text-center">
+        <div class="inline-block bg-gradient-to-r from-yellow-400 via-amber-400 to-orange-400 px-6 py-2.5 rounded-3xl border-4 border-white shadow-xl transform -rotate-1">
+          <h1 class="text-3xl sm:text-5xl font-bold text-amber-950 tracking-tight drop-shadow-sm">
+            🐵 El Mono Come Bananas
+          </h1>
+        </div>
+        <p class="mt-2 text-sm sm:text-lg font-semibold px-4 py-1 rounded-full bg-white/80 dark:bg-slate-800/80 inline-block shadow-sm">
+          ¡Cuenta, alimenta al mono y colecciona amigos de la selva!
+        </p>
+      </div>
+
+      <!-- Escenario Central de Bienvenida: Mono + Mascota -->
+      <div class="relative flex items-end justify-center gap-2 my-1">
+        <div id="menuMonkeyStage" class="w-44 h-44 sm:w-52 sm:h-52 cursor-pointer" onclick="monkeyTickle()"></div>
+        <div id="menuPetStage" class="w-24 h-24 sm:w-28 sm:h-28 -ml-4 mb-2 cursor-pointer" onclick="petTickle()"></div>
+      </div>
+
+      <!-- Selector de Nivel (1 al 5) -->
+      <div class="w-full max-w-3xl bg-white/90 dark:bg-slate-800/90 backdrop-blur-md p-3.5 sm:p-4 rounded-3xl border-4 border-amber-300 shadow-lg">
+        <div class="text-center font-bold text-base sm:text-lg mb-2.5 text-amber-700 dark:text-amber-300">
+          🎯 Elige tu Nivel de Aventura:
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-2" id="levelButtonsContainer">
+          <!-- Generado por JS -->
+        </div>
+      </div>
+
+      <!-- Botones Gigantes de Modos de Juego -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-3xl">
+        <button onclick="startGame('count')" class="btn-game bg-gradient-to-b from-lime-400 to-green-600 text-white p-5 rounded-3xl border-4 border-lime-200 flex items-center gap-4 text-left">
+          <span class="text-5xl sm:text-6xl bg-white/25 p-3 rounded-2xl">🔢</span>
+          <div>
+            <div class="text-2xl sm:text-3xl font-bold leading-tight">Contar Bananas</div>
+            <div class="text-sm sm:text-base text-lime-100 font-medium">¿Cuántas bananas ves?</div>
+          </div>
+        </button>
+
+        <button onclick="startGame('feed')" class="btn-game bg-gradient-to-b from-amber-400 to-orange-500 text-white p-5 rounded-3xl border-4 border-yellow-200 flex items-center gap-4 text-left">
+          <span class="text-5xl sm:text-6xl bg-white/25 p-3 rounded-2xl">🍌</span>
+          <div>
+            <div class="text-2xl sm:text-3xl font-bold leading-tight">Alimenta al Mono</div>
+            <div class="text-sm sm:text-base text-amber-100 font-medium">Arrastra y dale de comer</div>
+          </div>
+        </button>
+      </div>
+
+      <!-- Botones Secundarios: Tienda/Personalizar, Mascotas, Logros y PWA -->
+      <div class="flex flex-wrap justify-center gap-3 w-full max-w-3xl mt-1">
+        <button onclick="navigateTo('shop')" class="btn-game bg-gradient-to-b from-pink-400 to-rose-600 text-white font-bold px-5 py-3 rounded-2xl border-2 border-pink-200 flex items-center gap-2 text-base sm:text-lg">
+          <span>👑</span> Monos y Accesorios
+        </button>
+
+        <button onclick="navigateTo('pets')" class="btn-game bg-gradient-to-b from-cyan-400 to-blue-600 text-white font-bold px-5 py-3 rounded-2xl border-2 border-cyan-200 flex items-center gap-2 text-base sm:text-lg">
+          <span>🦜</span> Álbum de Mascotas
+        </button>
+
+        <button onclick="navigateTo('achievements')" class="btn-game bg-gradient-to-b from-violet-400 to-purple-600 text-white font-bold px-5 py-3 rounded-2xl border-2 border-violet-200 flex items-center gap-2 text-base sm:text-lg">
+          <span>🏆</span> Logros
+        </button>
+
+        <button id="btnInstallPWA" onclick="installPWA()" class="hidden btn-game bg-gradient-to-b from-emerald-400 to-teal-600 text-white font-bold px-5 py-3 rounded-2xl border-2 border-emerald-200 flex items-center gap-2 text-base sm:text-lg">
+          <span>📲</span> Instalar App
+        </button>
+      </div>
+    </section>
+
+    <!-- ==================== VISTA 2: PANTALLA DE JUEGO ==================== -->
+    <section id="view-game" class="hidden flex-col items-center gap-3 w-full">
+
+      <!-- Cabecera de Ronda y Temporizador (para Nivel 5) -->
+      <div class="w-full max-w-4xl flex flex-wrap items-center justify-between gap-2 bg-white/90 dark:bg-slate-800/90 px-4 py-2.5 rounded-3xl border-2 border-amber-300 shadow-md">
+        <div class="flex items-center gap-2">
+          <span id="gameModeBadge" class="bg-amber-400 text-amber-950 font-bold px-3 py-1 rounded-xl text-sm sm:text-base">
+            Nivel 1 • Contar
+          </span>
+          <span class="font-bold text-sm sm:text-base text-slate-600 dark:text-slate-300">
+            Reto <span id="roundStepText" class="text-emerald-600 dark:text-emerald-400 text-lg">1</span> / 10
+          </span>
+        </div>
+
+        <!-- Barra de Tiempo (visible en Nivel 4 y 5) -->
+        <div id="timerWrapper" class="hidden flex-1 max-w-xs flex items-center gap-2">
+          <span class="text-xl">⏱️</span>
+          <div class="flex-1 h-4 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden p-0.5">
+            <div id="timerBar" class="h-full bg-gradient-to-r from-rose-500 via-amber-400 to-emerald-400 rounded-full transition-all duration-100" style="width: 100%"></div>
+          </div>
+        </div>
+
+        <!-- Botón Repetir Instrucción por Voz -->
+        <button onclick="repeatInstruction()" class="btn-game bg-sky-400 hover:bg-sky-300 text-sky-950 font-bold px-3.5 py-1.5 rounded-2xl border-2 border-sky-200 flex items-center gap-1.5 text-sm sm:text-base">
+          <span>🗣️</span> Escuchar
+        </button>
+      </div>
+
+      <!-- Mensaje / Instrucción Principal -->
+      <div id="instructionBanner" class="w-full max-w-4xl bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-300 text-amber-950 px-5 py-3 rounded-3xl border-4 border-white shadow-lg text-center">
+        <h2 id="instructionText" class="text-2xl sm:text-3xl font-bold tracking-tight">
+          ¿Cuántas bananas ves?
+        </h2>
+      </div>
+
+      <!-- ÁREA PRINCIPAL INTERACTIVA -->
+      <div class="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
+
+        <!-- Columna del Personaje (Mono + Mascota + Plato en Modo 2) -->
+        <div class="lg:col-span-5 flex flex-col items-center justify-center">
+          <div id="monkeyDropZone" class="relative w-full max-w-sm bg-white/75 dark:bg-slate-800/75 backdrop-blur-sm rounded-3xl border-4 border-dashed border-amber-400 p-3 flex flex-col items-center transition-all duration-200">
+            <!-- Globo de diálogo del mono -->
+            <div id="monkeySpeechBubble" class="bg-white dark:bg-slate-700 text-slate-800 dark:text-white font-bold px-4 py-1.5 rounded-2xl shadow-md border-2 border-amber-300 text-sm sm:text-base mb-1 text-center">
+              ¡Tengo mucha hambre! 🤤
+            </div>
+
+            <!-- Escenario SVG Mono + Mascota -->
+            <div class="relative flex items-end justify-center w-full">
+              <div id="gameMonkeyStage" class="w-44 h-44 sm:w-52 sm:h-52 cursor-pointer" onclick="monkeyTickle()"></div>
+              <div id="gamePetStage" class="w-24 h-24 sm:w-28 sm:h-28 -ml-5 mb-2 cursor-pointer" onclick="petTickle()"></div>
+            </div>
+
+            <!-- Plato de bananas entregadas (solo en Modo 2: Alimenta al Mono) -->
+            <div id="feedingPlateContainer" class="hidden w-full mt-1 bg-amber-100/90 dark:bg-slate-700/90 rounded-2xl p-2.5 border-2 border-amber-400 text-center">
+              <div class="flex items-center justify-between mb-1 px-1">
+                <span class="text-xs sm:text-sm font-bold text-amber-900 dark:text-amber-200">
+                  Plato del Mono: <span id="fedCountBadge" class="text-lg text-emerald-600 dark:text-emerald-400">0</span>
+                </span>
+                <button onclick="removeOneFedBanana()" class="btn-game bg-rose-400 text-white text-xs font-bold px-2.5 py-1 rounded-xl">
+                  ↩️ Quitar 1
+                </button>
+              </div>
+              <div id="plateBananasGrid" class="min-h-[54px] flex flex-wrap items-center justify-center gap-1 p-1 bg-white/70 dark:bg-slate-800/70 rounded-xl">
+                <span class="text-xs text-slate-400 italic">Arrastra o toca bananas aquí</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Columna de Bananas y Opciones -->
+        <div class="lg:col-span-7 flex flex-col items-center gap-4">
+          <!-- Tablero donde aparecen las bananas -->
+          <div id="bananasBoard" class="w-full min-h-[210px] sm:min-h-[250px] bg-white/85 dark:bg-slate-800/85 backdrop-blur-sm rounded-3xl border-4 border-lime-400 p-4 shadow-xl flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+            <!-- Bananas SVG renderizadas dinámicamente -->
+          </div>
+
+          <!-- Controles Modo 1: 3 Botones Gigantes de Opciones -->
+          <div id="mode1Options" class="w-full grid grid-cols-3 gap-3 sm:gap-5">
+            <!-- Generado dinámicamente -->
+          </div>
+
+          <!-- Controles Modo 2: Botón Gigante "¡Listo, a comer!" -->
+          <div id="mode2Controls" class="hidden w-full flex flex-col sm:flex-row items-center justify-center gap-3">
+            <button onclick="validateFeeding()" class="btn-game w-full sm:w-auto flex-1 bg-gradient-to-b from-emerald-400 to-green-600 text-white font-bold text-2xl sm:text-3xl py-4 px-8 rounded-3xl border-4 border-emerald-200 flex items-center justify-center gap-3">
+              <span>🍽️</span> ¡Listo, a comer!
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== VISTA 3: TIENDA DE MONOS Y ACCESORIOS ==================== -->
+    <section id="view-shop" class="hidden flex-col items-center gap-4 py-2">
+      <div class="w-full max-w-5xl bg-white/92 dark:bg-slate-800/92 backdrop-blur-md rounded-3xl border-4 border-pink-300 p-4 sm:p-6 shadow-xl">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+          <h2 class="text-2xl sm:text-3xl font-bold text-pink-600 dark:text-pink-400">
+            👑 Armario y Tienda del Mono
+          </h2>
+          <button onclick="navigateTo('menu')" class="btn-game bg-amber-400 text-amber-950 font-bold px-4 py-2 rounded-2xl">
+            ← Volver a Jugar
+          </button>
+        </div>
+
+        <!-- Vista previa en vivo del Mono personalizado -->
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-4 bg-gradient-to-r from-amber-100 via-yellow-100 to-lime-100 dark:from-slate-700 dark:to-slate-600 p-4 rounded-3xl border-2 border-amber-300 mb-5">
+          <div id="shopPreviewMonkey" class="w-40 h-40"></div>
+          <div class="text-center sm:text-left">
+            <div class="text-lg sm:text-xl font-bold" id="shopActiveOutfitName">Mono Clásico</div>
+            <p class="text-sm text-slate-600 dark:text-slate-300">¡Usa tus 🍌 Bananacoins para desbloquear trajes y accesorios!</p>
+          </div>
+        </div>
+
+        <!-- Sub-pestañas: Trajes de Mono vs Accesorios -->
+        <div class="flex gap-2 mb-4">
+          <button id="tabMonkeys" onclick="switchShopTab('monkeys')" class="btn-game flex-1 py-2.5 rounded-2xl font-bold text-lg bg-pink-500 text-white">
+            🐵 Monos Especiales
+          </button>
+          <button id="tabAccessories" onclick="switchShopTab('accessories')" class="btn-game flex-1 py-2.5 rounded-2xl font-bold text-lg bg-slate-200 dark:bg-slate-700">
+            🎩 Accesorios Divertidos
+          </button>
+        </div>
+
+        <div id="shopItemsGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+          <!-- Renderizado por JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== VISTA 4: ÁLBUM DE MASCOTAS ==================== -->
+    <section id="view-pets" class="hidden flex-col items-center gap-4 py-2">
+      <div class="w-full max-w-5xl bg-white/92 dark:bg-slate-800/92 backdrop-blur-md rounded-3xl border-4 border-cyan-300 p-4 sm:p-6 shadow-xl">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+          <div>
+            <h2 class="text-2xl sm:text-3xl font-bold text-cyan-600 dark:text-cyan-400">
+              🦜 Álbum de Mascotas de la Selva
+            </h2>
+            <p class="text-sm text-slate-600 dark:text-slate-300">
+              Tus mascotas te acompañan, celebran tus aciertos y suben de nivel.
+            </p>
+          </div>
+          <button onclick="navigateTo('menu')" class="btn-game bg-amber-400 text-amber-950 font-bold px-4 py-2 rounded-2xl">
+            ← Volver a Jugar
+          </button>
+        </div>
+
+        <div id="petsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- Renderizado por JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== VISTA 5: LOGROS Y MEDALLAS ==================== -->
+    <section id="view-achievements" class="hidden flex-col items-center gap-4 py-2">
+      <div class="w-full max-w-5xl bg-white/92 dark:bg-slate-800/92 backdrop-blur-md rounded-3xl border-4 border-violet-300 p-4 sm:p-6 shadow-xl">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+          <h2 class="text-2xl sm:text-3xl font-bold text-violet-600 dark:text-violet-400">
+            🏆 Logros y Medallas de Campeón
+          </h2>
+          <button onclick="navigateTo('menu')" class="btn-game bg-amber-400 text-amber-950 font-bold px-4 py-2 rounded-2xl">
+            ← Volver a Jugar
+          </button>
+        </div>
+
+        <div id="achievementsGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+          <!-- Renderizado por JS -->
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==================== MODAL COFRE SORPRESA ==================== -->
+  <div id="chestModal" class="hidden fixed inset-0 z-50 bg-black/65 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-gradient-to-b from-amber-200 to-yellow-100 dark:from-slate-800 dark:to-slate-900 rounded-3xl border-4 border-yellow-400 max-w-md w-full p-6 text-center shadow-2xl">
+      <h3 class="text-3xl font-bold text-amber-700 dark:text-yellow-300 mb-2">
+        🎁 ¡Cofre Sorpresa!
+      </h3>
+      <p class="text-base font-medium mb-4">¡Toca el cofre mágico para abrir tu premio!</p>
+
+      <div id="chestInteractiveBox" onclick="openSurpriseChest()" class="cursor-pointer mx-auto w-40 h-40 flex items-center justify-center text-8xl chest-shake select-none">
+        🧰
+      </div>
+
+      <div id="chestRewardResult" class="hidden mt-4 p-4 bg-white/90 dark:bg-slate-700/90 rounded-2xl border-2 border-amber-400">
+        <div id="chestRewardIcon" class="text-5xl mb-1">🍌</div>
+        <div id="chestRewardText" class="text-xl font-bold text-emerald-600 dark:text-emerald-300">+25 Bananacoins</div>
+      </div>
+
+      <button id="btnCloseChest" onclick="closeChestModal()" class="hidden mt-5 btn-game w-full bg-emerald-500 text-white font-bold text-xl py-3 rounded-2xl border-2 border-emerald-200">
+        ¡Genial, seguir jugando!
+      </button>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL PANTALLA DE VICTORIA ÉPICA ==================== -->
+  <div id="victoryModal" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-gradient-to-b from-yellow-300 via-amber-200 to-lime-200 dark:from-slate-800 dark:to-indigo-950 rounded-3xl border-4 border-white max-w-lg w-full p-6 text-center shadow-2xl relative overflow-hidden">
+      <div class="inline-block bg-amber-500 text-white font-bold px-4 py-1 rounded-full text-sm mb-2 shadow">
+        🏆 ¡RONDA COMPLETADA! 🏆
+      </div>
+      <h2 class="text-3xl sm:text-4xl font-bold text-amber-950 dark:text-yellow-300 mb-2">
+        ¡Eres un Gran Contador!
+      </h2>
+
+      <!-- Mono y Mascota bailando juntos -->
+      <div class="flex items-end justify-center gap-2 my-2">
+        <div id="victoryMonkeyStage" class="w-40 h-40"></div>
+        <div id="victoryPetStage" class="w-24 h-24 -ml-4 mb-2"></div>
+      </div>
+
+      <p id="victoryMessage" class="text-base sm:text-lg font-semibold text-slate-800 dark:text-slate-100 mb-4">
+        ¡Increíble! Has ayudado al mono a comer todas sus bananas.
+      </p>
+
+      <div class="grid grid-cols-2 gap-3 mb-5">
+        <div class="bg-white/90 dark:bg-slate-800/90 p-3 rounded-2xl border-2 border-yellow-400">
+          <div class="text-sm text-slate-500">Bananacoins Ganadas</div>
+          <div class="text-2xl font-bold text-amber-600" id="victoryCoinsEarned">+50 🍌</div>
+        </div>
+        <div class="bg-white/90 dark:bg-slate-800/90 p-3 rounded-2xl border-2 border-sky-400">
+          <div class="text-sm text-slate-500">Estrellas Ganadas</div>
+          <div class="text-2xl font-bold text-sky-600" id="victoryStarsEarned">+3 ⭐</div>
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-3">
+        <button onclick="playAgainSameMode()" class="btn-game flex-1 bg-gradient-to-b from-lime-400 to-green-600 text-white font-bold text-xl py-3.5 px-5 rounded-2xl border-2 border-lime-200">
+          🔄 ¡Jugar Otra Vez!
+        </button>
+        <button onclick="closeVictoryToMenu()" class="btn-game bg-amber-400 text-amber-950 font-bold text-lg py-3.5 px-5 rounded-2xl border-2 border-amber-200">
+          🏠 Inicio
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST DE NOTIFICACIÓN AMIGABLE (Logros / Mensajes) -->
+  <div id="toastBanner" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 pointer-events-none opacity-0 transition-all duration-300 transform translate-y-4">
+    <div class="bg-slate-900/95 text-white px-5 py-3 rounded-2xl border-2 border-yellow-400 shadow-2xl flex items-center gap-3">
+      <span id="toastIcon" class="text-2xl">🏅</span>
+      <div>
+        <div id="toastTitle" class="font-bold text-yellow-300 text-sm">¡Logro Desbloqueado!</div>
+        <div id="toastBody" class="text-xs sm:text-sm">Primer Festín</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ============================================================================
+       1. CONFIGURACIÓN PWA OFFLINE (MANIFEST DINÁMICO + SERVICE WORKER BLOB)
+       ============================================================================ */
+    (function setupPWA() {
+      const iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128"><rect width="128" height="128" rx="28" fill="#22c55e"/><circle cx="64" cy="68" r="42" fill="#854d0e"/><circle cx="24" cy="62" r="14" fill="#ca8a04"/><circle cx="104" cy="62" r="14" fill="#ca8a04"/><ellipse cx="64" cy="76" rx="30" ry="24" fill="#fde68a"/><circle cx="50" cy="56" r="8" fill="#fff"/><circle cx="78" cy="56" r="8" fill="#fff"/><circle cx="51" cy="56" r="4" fill="#1e293b"/><circle cx="77" cy="56" r="4" fill="#1e293b"/><path d="M50 80 Q64 94 78 80" stroke="#78350f" stroke-width="5" fill="none" stroke-linecap="round"/></svg>`;
+      const iconUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(iconSvg)));
+
+      const manifest = {
+        name: "El Mono Come Bananas",
+        short_name: "Mono Bananas",
+        description: "Juego educativo de conteo y números para niños de 5 a 7 años.",
+        start_url: "./",
+        display: "standalone",
+        background_color: "#22c55e",
+        theme_color: "#22c55e",
+        orientation: "any",
+        icons: [
+          { src: iconUrl, sizes: "192x192", type: "image/svg+xml", purpose: "any maskable" },
+          { src: iconUrl, sizes: "512x512", type: "image/svg+xml", purpose: "any maskable" }
+        ]
+      };
+
+      const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
+      const manifestLink = document.createElement('link');
+      manifestLink.rel = 'manifest';
+      manifestLink.href = URL.createObjectURL(manifestBlob);
+      document.head.appendChild(manifestLink);
+
+      // Service Worker offline mediante Blob (compatible con hosting estático y single-file)
+      if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+        const swCode = `
+          const CACHE_NAME = 'mono-bananas-v1';
+          self.addEventListener('install', (e) => {
+            self.skipWaiting();
+            e.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(['./']).catch(() => {})));
+          });
+          self.addEventListener('activate', (e) => {
+            e.waitUntil(self.clients.claim());
+          });
+          self.addEventListener('fetch', (e) => {
+            e.respondWith(
+              caches.match(e.request).then((cached) => cached || fetch(e.request).then((resp) => {
+                if (resp && resp.status === 200 && e.request.method === 'GET') {
+                  const clone = resp.clone();
+                  caches.open(CACHE_NAME).then((c) => c.put(e.request, clone));
+                }
+                return resp;
+              }).catch(() => cached))
+            );
+          });
+        `;
+        try {
+          const swBlob = new Blob([swCode], { type: 'application/javascript' });
+          navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(() => {});
+        } catch (err) {}
+      }
+    })();
+
+    let deferredInstallPrompt = null;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredInstallPrompt = e;
+      document.getElementById('btnInstallPWA')?.classList.remove('hidden');
+    });
+
+    function installPWA() {
+      if (deferredInstallPrompt) {
+        deferredInstallPrompt.prompt();
+        deferredInstallPrompt.userChoice.then(() => {
+          deferredInstallPrompt = null;
+          document.getElementById('btnInstallPWA')?.classList.add('hidden');
+        });
+      }
+    }
+
+    /* ============================================================================
+       2. CATÁLOGOS DE NIVELES, MONOS, ACCESORIOS, MASCOTAS Y LOGROS
+       ============================================================================ */
+    const LEVELS = [
+      { id: 1, name: "Nivel 1", desc: "1 al 5", min: 1, max: 5, timeLimit: 0, color: "from-lime-400 to-green-500" },
+      { id: 2, name: "Nivel 2", desc: "1 al 10", min: 1, max: 10, timeLimit: 0, color: "from-emerald-400 to-teal-500" },
+      { id: 3, name: "Nivel 3", desc: "1 al 20", min: 1, max: 20, timeLimit: 0, color: "from-sky-400 to-blue-500" },
+      { id: 4, name: "Nivel 4", desc: "Rápido", min: 1, max: 12, timeLimit: 18, color: "from-amber-400 to-orange-500" },
+      { id: 5, name: "Nivel 5", desc: "Reloj", min: 1, max: 15, timeLimit: 12, color: "from-rose-400 to-pink-600" }
+    ];
+
+    const MONKEY_OUTFITS = [
+      { id: 'classic', name: 'Mono Clásico', price: 0, desc: '¡Nuestro amigo alegre de la selva!' },
+      { id: 'explorer', name: 'Mono Explorador', price: 40, desc: 'Sombrero safari para descubrir números.' },
+      { id: 'pirate', name: 'Mono Pirata', price: 70, desc: 'Parche y sombrero pirata busca-bananas.' },
+      { id: 'astronaut', name: 'Mono Astronauta', price: 110, desc: 'Casco espacial para contar estrellas.' },
+      { id: 'ninja', name: 'Mono Ninja', price: 150, desc: 'Bandana negra veloz y sigilosa.' },
+      { id: 'superhero', name: 'Mono Superhéroe', price: 200, desc: 'Antifaz y capa brillante de campeón.' }
+    ];
+
+    const ACCESSORIES = [
+      { id: 'none', name: 'Sin Accesorio', price: 0, icon: '✨' },
+      { id: 'glasses', name: 'Gafas Estrella', price: 30, icon: '🕶️' },
+      { id: 'tie', name: 'Corbata Elegante', price: 35, icon: '👔' },
+      { id: 'backpack', name: 'Mochila Aventurera', price: 50, icon: '🎒' },
+      { id: 'cape', name: 'Capa Real', price: 65, icon: '🦸' },
+      { id: 'crown', name: 'Corona Dorada', price: 90, icon: '👑' },
+      { id: 'wizard', name: 'Sombrero Mágico', price: 100, icon: '🧙' }
+    ];
+
+    const PETS = [
+      { id: 'toucan', name: 'Tucán Pico Alegre', emoji: '🐦', price: 0, perk: 'Aplaude con sus alas coloridas' },
+      { id: 'parrot', name: 'Loro Parlanchín', emoji: '🦜', price: 50, perk: 'Baila al ritmo de tus aciertos' },
+      { id: 'frog', name: 'Rana Saltarina', emoji: '🐸', price: 80, perk: 'Da súper saltos de felicidad' },
+      { id: 'turtle', name: 'Tortuga Sabia', emoji: '🐢', price: 110, perk: 'Brilla con estrella de sabiduría' },
+      { id: 'bee', name: 'Abeja Zumbadora', emoji: '🐝', price: 140, perk: 'Vuela en círculos mágicos' }
+    ];
+
+    const ACHIEVEMENTS = [
+      { id: 'first_bite', name: 'Primer Festín', desc: 'Acierta tu primer reto con el mono', icon: '🍌', check: (s) => s.totalCorrect >= 1 },
+      { id: 'counter_10', name: 'Contador Curioso', desc: 'Consigue 10 respuestas correctas', icon: '🔢', check: (s) => s.totalCorrect >= 10 },
+      { id: 'counter_50', name: 'Súper Contador', desc: 'Consigue 50 respuestas correctas', icon: '🌟', check: (s) => s.totalCorrect >= 50 },
+      { id: 'rich_monkey', name: 'Tesoro de Bananas', desc: 'Acumula 100 Bananacoins', icon: '💰', check: (s) => s.coins >= 100 },
+      { id: 'collector', name: 'Moda en la Selva', desc: 'Desbloquea 2 o más trajes o accesorios', icon: '👑', check: (s) => (s.unlockedMonkeys.length + s.unlockedAccessories.length) >= 4 },
+      { id: 'pet_lover', name: 'Amigo de los Animales', desc: 'Adopta al menos 2 mascotas', icon: '🦜', check: (s) => s.unlockedPets.length >= 2 },
+      { id: 'champion_round', name: 'Campeón de Ronda', desc: 'Completa una ronda entera de 10 retos', icon: '🏆', check: (s) => s.roundsCompleted >= 1 }
+    ];
+
+    const NUMBER_WORDS_ES = {
+      0: 'cero', 1: 'una', 2: 'dos', 3: 'tres', 4: 'cuatro', 5: 'cinco',
+      6: 'seis', 7: 'siete', 8: 'ocho', 9: 'nueve', 10: 'diez',
+      11: 'once', 12: 'doce', 13: 'trece', 14: 'catorce', 15: 'quince',
+      16: 'dieciséis', 17: 'diecisiete', 18: 'dieciocho', 19: 'diecinueve', 20: 'veinte'
+    };
+
+    const COUNT_WORDS_ES = {
+      1: 'Uno', 2: 'Dos', 3: 'Tres', 4: 'Cuatro', 5: 'Cinco',
+      6: 'Seis', 7: 'Siete', 8: 'Ocho', 9: 'Nueve', 10: 'Diez',
+      11: 'Once', 12: 'Doce', 13: 'Trece', 14: 'Catorce', 15: 'Quince',
+      16: 'Dieciséis', 17: 'Diecisiete', 18: 'Dieciocho', 19: 'Diecinueve', 20: 'Veinte'
+    };
+
+    /* ============================================================================
+       3. ESTADO PERSISTENTE EN LOCALSTORAGE
+       ============================================================================ */
+    const DEFAULT_STATE = {
+      coins: 20,
+      stars: 0,
+      streak: 1,
+      lastPlayDate: new Date().toDateString(),
+      selectedLevel: 1,
+      voiceEnabled: true,
+      darkMode: false,
+      chestProgress: 0,
+      totalCorrect: 0,
+      roundsCompleted: 0,
+      equippedMonkey: 'classic',
+      unlockedMonkeys: ['classic'],
+      equippedAccessory: 'none',
+      unlockedAccessories: ['none'],
+      equippedPet: 'toucan',
+      unlockedPets: ['toucan'],
+      petXp: { toucan: 0, parrot: 0, frog: 0, turtle: 0, bee: 0 },
+      unlockedAchievements: []
+    };
+
+    let state = loadState();
+
+    function loadState() {
+      try {
+        const saved = JSON.parse(localStorage.getItem('mono_come_bananas_v1'));
+        if (!saved) return { ...DEFAULT_STATE };
+        const merged = { ...DEFAULT_STATE, ...saved, petXp: { ...DEFAULT_STATE.petXp, ...(saved.petXp || {}) } };
+        // Actualizar racha diaria
+        const today = new Date().toDateString();
+        if (merged.lastPlayDate !== today) {
+          const yesterday = new Date(Date.now() - 86400000).toDateString();
+          merged.streak = (merged.lastPlayDate === yesterday) ? merged.streak + 1 : 1;
+          merged.lastPlayDate = today;
+        }
+        return merged;
+      } catch (e) {
+        return { ...DEFAULT_STATE };
+      }
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem('mono_come_bananas_v1', JSON.stringify(state));
+      } catch (e) {}
+      updateTopHUD();
+    }
+
+    /* ============================================================================
+       4. MOTOR DE AUDIO SINTETIZADO (WEB AUDIO API) Y VOZ (es-MX)
+       ============================================================================ */
+    let audioCtx = null;
+    function getAudioCtx() {
+      if (!audioCtx) {
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if (Ctx) audioCtx = new Ctx();
+      }
+      if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+      return audioCtx;
+    }
+
+    const SFX = {
+      pop() {
+        const ctx = getAudioCtx();
+        if (!ctx) return;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(340, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(680, ctx.currentTime + 0.09);
+        gain.gain.setValueAtTime(0.22, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.11);
+      },
+      chime() {
+        const ctx = getAudioCtx();
+        if (!ctx) return;
+        const notes = [523.25, 659.25, 783.99, 1046.5]; // Do5, Mi5, Sol5, Do6
+        notes.forEach((freq, i) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'triangle';
+          const t = ctx.currentTime + i * 0.08;
+          osc.frequency.setValueAtTime(freq, t);
+          gain.gain.setValueAtTime(0.2, t);
+          gain.gain.exponentialRampToValueAtTime(0.005, t + 0.35);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(t);
+          osc.stop(t + 0.36);
+        });
+      },
+      nomNom() {
+        const ctx = getAudioCtx();
+        if (!ctx) return;
+        [0, 0.22].forEach((offset) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          const t = ctx.currentTime + offset;
+          osc.frequency.setValueAtTime(220, t);
+          osc.frequency.exponentialRampToValueAtTime(420, t + 0.08);
+          osc.frequency.exponentialRampToValueAtTime(190, t + 0.18);
+          gain.gain.setValueAtTime(0.25, t);
+          gain.gain.exponentialRampToValueAtTime(0.01, t + 0.19);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(t);
+          osc.stop(t + 0.2);
+        });
+      },
+      gentleTryAgain() {
+        const ctx = getAudioCtx();
+        if (!ctx) return;
+        const notes = [392.0, 440.0]; // Sol4 -> La4 amable
+        notes.forEach((freq, i) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          const t = ctx.currentTime + i * 0.14;
+          osc.frequency.setValueAtTime(freq, t);
+          gain.gain.setValueAtTime(0.15, t);
+          gain.gain.exponentialRampToValueAtTime(0.005, t + 0.28);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(t);
+          osc.stop(t + 0.3);
+        });
+      },
+      fanfare() {
+        const ctx = getAudioCtx();
+        if (!ctx) return;
+        const melody = [523.25, 659.25, 783.99, 1046.5, 783.99, 1046.5];
+        melody.forEach((freq, i) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'triangle';
+          const t = ctx.currentTime + i * 0.11;
+          osc.frequency.setValueAtTime(freq, t);
+          gain.gain.setValueAtTime(0.24, t);
+          gain.gain.exponentialRampToValueAtTime(0.005, t + 0.42);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(t);
+          osc.stop(t + 0.44);
+        });
+      }
+    };
+
+    // Síntesis de Voz en Español México (es-MX)
+    let preferredVoice = null;
+    function loadVoices() {
+      if (!('speechSynthesis' in window)) return;
+      const voices = window.speechSynthesis.getVoices();
+      preferredVoice =
+        voices.find((v) => v.lang === 'es-MX' && (v.name.includes('Google') || v.name.includes('Paulina') || v.name.includes('Sabina') || v.name.includes('Dalia'))) ||
+        voices.find((v) => v.lang === 'es-MX') ||
+        voices.find((v) => v.lang.startsWith('es-')) ||
+        null;
+    }
+    if ('speechSynthesis' in window) {
+      loadVoices();
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+
+    function speak(text, onEndCallback = null) {
+      if (!state.voiceEnabled || !('speechSynthesis' in window)) {
+        if (onEndCallback) setTimeout(onEndCallback, 500);
+        return;
+      }
+      window.speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = 'es-MX';
+      if (preferredVoice) utter.voice = preferredVoice;
+      utter.pitch = 1.22; // Tono infantil, cálido y entusiasta
+      utter.rate = 0.96;  // Velocidad clara para niños de 5 a 7 años
+      if (onEndCallback) {
+        utter.onend = onEndCallback;
+        utter.onerror = onEndCallback;
+      }
+      window.speechSynthesis.speak(utter);
+    }
+
+    function toggleVoice() {
+      state.voiceEnabled = !state.voiceEnabled;
+      saveState();
+      if (state.voiceEnabled) {
+        SFX.pop();
+        speak("¡Voz activada!");
+      } else if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    }
+
+    /* ============================================================================
+       5. ILUSTRACIONES SVG VECTORIALES DE ALTA CALIDAD (MONO, MASCOTAS, BANANAS)
+       ============================================================================ */
+    function renderBananaSVG(sizeClass = "w-14 h-14 sm:w-16 sm:h-16") {
+      return `
+        <svg class="${sizeClass} drop-shadow-md pointer-events-none" viewBox="0 0 100 100">
+          <defs>
+            <linearGradient id="bananaGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#fef08a"/>
+              <stop offset="45%" stop-color="#facc15"/>
+              <stop offset="100%" stop-color="#eab308"/>
+            </linearGradient>
+          </defs>
+          <!-- Cuerpo principal -->
+          <path d="M22 20 C18 55, 42 84, 82 78 C86 77, 88 72, 84 68 C58 66, 38 46, 33 18 C32 14, 24 15, 22 20 Z"
+                fill="url(#bananaGrad)" stroke="#a16207" stroke-width="3.5" stroke-linejoin="round"/>
+          <!-- Brillo cartoon -->
+          <path d="M30 28 C30 50, 46 68, 72 71" fill="none" stroke="#fef9c3" stroke-width="4" stroke-linecap="round"/>
+          <!-- Puntitas -->
+          <path d="M23 17 L28 12 L33 17 Z" fill="#713f12"/>
+          <circle cx="84" cy="73" r="3.5" fill="#713f12"/>
+        </svg>
+      `;
+    }
+
+    function renderMonkeySVG(mood = 'idle', outfitId = state.equippedMonkey, accId = state.equippedAccessory) {
+      // Expresión de boca según estado
+      let mouthSVG = `<path d="M92 104 Q110 118 128 104" stroke="#78350f" stroke-width="4.5" fill="none" stroke-linecap="round"/>`;
+      let eyesSVG = `
+        <circle cx="95" cy="76" r="11" fill="#ffffff"/>
+        <circle cx="125" cy="76" r="11" fill="#ffffff"/>
+        <circle cx="97" cy="76" r="5.5" fill="#1e293b"/>
+        <circle cx="123" cy="76" r="5.5" fill="#1e293b"/>
+        <circle cx="99" cy="74" r="2" fill="#ffffff"/>
+        <circle cx="125" cy="74" r="2" fill="#ffffff"/>
+      `;
+
+      if (mood === 'happy') {
+        mouthSVG = `<path d="M88 100 Q110 128 132 100 Z" fill="#dc2626" stroke="#78350f" stroke-width="3.5" stroke-linejoin="round"/>
+                    <path d="M98 112 Q110 122 122 112" fill="#f87171"/>`;
+        eyesSVG = `
+          <path d="M85 76 Q95 65 105 76" stroke="#451a03" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+          <path d="M115 76 Q125 65 135 76" stroke="#451a03" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+        `;
+      } else if (mood === 'eat') {
+        mouthSVG = `<ellipse cx="110" cy="107" rx="14" ry="11" fill="#b91c1c" stroke="#78350f" stroke-width="3.5"/>
+                    <circle cx="84" cy="102" r="9" fill="#f59e0b" opacity="0.65"/>
+                    <circle cx="136" cy="102" r="9" fill="#f59e0b" opacity="0.65"/>`;
+      } else if (mood === 'confused') {
+        mouthSVG = `<path d="M96 108 Q104 102 110 108 Q116 114 124 108" stroke="#78350f" stroke-width="4" fill="none" stroke-linecap="round"/>`;
+        eyesSVG = `
+          <circle cx="95" cy="76" r="13" fill="#ffffff"/>
+          <circle cx="125" cy="76" r="10" fill="#ffffff"/>
+          <circle cx="95" cy="74" r="5" fill="#1e293b"/>
+          <circle cx="125" cy="78" r="4.5" fill="#1e293b"/>
+          <text x="142" y="52" font-size="24" font-weight="bold" fill="#f59e0b">?</text>
+        `;
+      }
+
+      // Capas / Mochilas (detrás del cuerpo)
+      let backLayerSVG = '';
+      if (outfitId === 'superhero' || accId === 'cape') {
+        const capeColor = outfitId === 'superhero' ? '#ef4444' : '#7c3aed';
+        backLayerSVG += `<path d="M72 122 L42 185 L178 185 L148 122 Z" fill="${capeColor}" stroke="#fef08a" stroke-width="3" stroke-linejoin="round"/>`;
+      }
+      if (accId === 'backpack') {
+        backLayerSVG += `<rect x="64" y="122" width="92" height="54" rx="18" fill="#0284c7" stroke="#0369a1" stroke-width="3"/>`;
+      }
+
+      // Trajes en el torso
+      let torsoOutfitSVG = `<ellipse cx="110" cy="154" rx="26" ry="24" fill="#fde68a"/>`;
+      if (outfitId === 'explorer') {
+        torsoOutfitSVG = `
+          <path d="M76 126 L144 126 L148 182 L72 182 Z" fill="#d97706" rx="12"/>
+          <rect x="106" y="126" width="8" height="56" fill="#fde68a"/>
+          <circle cx="92" cy="150" r="6" fill="#b45309"/>
+          <circle cx="128" cy="150" r="6" fill="#b45309"/>
+        `;
+      } else if (outfitId === 'astronaut') {
+        torsoOutfitSVG = `
+          <rect x="72" y="124" width="76" height="60" rx="22" fill="#f8fafc" stroke="#94a3b8" stroke-width="3"/>
+          <rect x="94" y="138" width="32" height="20" rx="5" fill="#38bdf8" stroke="#0284c7" stroke-width="2"/>
+        `;
+      } else if (outfitId === 'ninja') {
+        torsoOutfitSVG = `
+          <rect x="74" y="125" width="72" height="58" rx="20" fill="#1e293b"/>
+          <rect x="74" y="152" width="72" height="10" fill="#ef4444"/>
+        `;
+      } else if (outfitId === 'superhero') {
+        torsoOutfitSVG = `
+          <rect x="74" y="125" width="72" height="58" rx="20" fill="#2563eb"/>
+          <polygon points="110,134 124,148 110,164 96,148" fill="#facc15" stroke="#dc2626" stroke-width="2"/>
+        `;
+      }
+
+      // Corbata
+      if (accId === 'tie') {
+        torsoOutfitSVG += `<polygon points="110,124 103,134 106,162 110,168 114,162 117,134" fill="#e11d48" stroke="#881337" stroke-width="2"/>`;
+      }
+
+      // Cabeza / Sombreros / Cascos
+      let headGearSVG = '';
+      if (outfitId === 'explorer') {
+        headGearSVG = `
+          <ellipse cx="110" cy="40" rx="48" ry="11" fill="#eab308" stroke="#854d0e" stroke-width="3"/>
+          <path d="M80 40 C80 16, 140 16, 140 40 Z" fill="#facc15" stroke="#854d0e" stroke-width="3"/>
+        `;
+      } else if (outfitId === 'pirate') {
+        headGearSVG = `
+          <path d="M62 42 Q110 8 158 42 Q135 50 110 46 Q85 50 62 42 Z" fill="#1e293b" stroke="#facc15" stroke-width="3"/>
+          <circle cx="110" cy="28" r="7" fill="#ffffff"/>
+          <circle cx="125" cy="76" r="12" fill="#0f172a"/>
+          <path d="M72 64 L145 84" stroke="#0f172a" stroke-width="3.5"/>
+        `;
+      } else if (outfitId === 'astronaut') {
+        headGearSVG = `
+          <circle cx="110" cy="80" r="54" fill="rgba(186, 230, 253, 0.32)" stroke="#e2e8f0" stroke-width="5"/>
+          <path d="M74 52 Q90 38 112 42" stroke="#ffffff" stroke-width="4" fill="none" stroke-linecap="round"/>
+        `;
+      } else if (outfitId === 'ninja') {
+        headGearSVG = `
+          <rect x="68" y="44" width="84" height="16" rx="6" fill="#0f172a"/>
+          <rect x="94" y="47" width="32" height="10" rx="3" fill="#94a3b8"/>
+          <path d="M150 50 L172 42 L166 56 Z" fill="#ef4444"/>
+        `;
+      } else if (outfitId === 'superhero') {
+        headGearSVG = `
+          <path d="M76 68 Q110 62 144 68 L142 84 Q110 78 78 84 Z" fill="#ef4444"/>
+        `;
+      }
+
+      // Accesorios en cabeza/ojos
+      if (accId === 'glasses') {
+        headGearSVG += `
+          <rect x="79" y="65" width="28" height="20" rx="6" fill="rgba(56,189,248,0.45)" stroke="#db2777" stroke-width="3.5"/>
+          <rect x="113" y="65" width="28" height="20" rx="6" fill="rgba(56,189,248,0.45)" stroke="#db2777" stroke-width="3.5"/>
+          <line x1="107" y1="74" x2="113" y2="74" stroke="#db2777" stroke-width="3.5"/>
+        `;
+      } else if (accId === 'crown') {
+        headGearSVG += `
+          <polygon points="84,42 88,18 100,32 110,14 120,32 132,18 136,42" fill="#facc15" stroke="#b45309" stroke-width="3" stroke-linejoin="round"/>
+          <circle cx="110" cy="34" r="3.5" fill="#ef4444"/>
+        `;
+      } else if (accId === 'wizard') {
+        headGearSVG += `
+          <ellipse cx="110" cy="42" rx="46" ry="9" fill="#6d28d9" stroke="#facc15" stroke-width="2.5"/>
+          <polygon points="82,42 110,4 138,42" fill="#7c3aed" stroke="#facc15" stroke-width="2.5"/>
+          <text x="103" y="32" font-size="14" fill="#fde047">★</text>
+        `;
+      }
+
+      const animClass = `anim-monkey-${mood}`;
+
+      return `
+        <svg class="w-full h-full overflow-visible ${animClass}" viewBox="0 0 220 220">
+          <!-- Cola simpática -->
+          <path d="M145 170 Q195 165 188 125 Q182 105 168 118" fill="none" stroke="#78350f" stroke-width="11" stroke-linecap="round"/>
+
+          ${backLayerSVG}
+
+          <!-- Pies -->
+          <ellipse cx="88" cy="196" rx="18" ry="11" fill="#eab308" stroke="#78350f" stroke-width="3"/>
+          <ellipse cx="132" cy="196" rx="18" ry="11" fill="#eab308" stroke="#78350f" stroke-width="3"/>
+
+          <!-- Cuerpo -->
+          <ellipse cx="110" cy="154" rx="40" ry="38" fill="#92400e" stroke="#451a03" stroke-width="3.5"/>
+          ${torsoOutfitSVG}
+
+          <!-- Brazos articulados -->
+          <g class="monkey-arm-l">
+            <path d="M74 132 Q44 148 54 172" fill="none" stroke="#92400e" stroke-width="16" stroke-linecap="round"/>
+            <circle cx="54" cy="172" r="10" fill="#fde68a" stroke="#78350f" stroke-width="2.5"/>
+          </g>
+          <g class="monkey-arm-r">
+            <path d="M146 132 Q176 148 166 172" fill="none" stroke="#92400e" stroke-width="16" stroke-linecap="round"/>
+            <circle cx="166" cy="172" r="10" fill="#fde68a" stroke="#78350f" stroke-width="2.5"/>
+          </g>
+
+          <!-- Orejas -->
+          <circle cx="62" cy="78" r="18" fill="#92400e" stroke="#451a03" stroke-width="3.5"/>
+          <circle cx="62" cy="78" r="10" fill="#fcd34d"/>
+          <circle cx="158" cy="78" r="18" fill="#92400e" stroke="#451a03" stroke-width="3.5"/>
+          <circle cx="158" cy="78" r="10" fill="#fcd34d"/>
+
+          <!-- Cabeza -->
+          <circle cx="110" cy="80" r="44" fill="#92400e" stroke="#451a03" stroke-width="3.5"/>
+          <!-- Mechón de pelo -->
+          <path d="M104 36 Q110 22 116 36" fill="none" stroke="#451a03" stroke-width="4" stroke-linecap="round"/>
+
+          <!-- Antifaz facial claro -->
+          <ellipse cx="96" cy="76" rx="16" ry="18" fill="#fde68a"/>
+          <ellipse cx="124" cy="76" rx="16" ry="18" fill="#fde68a"/>
+          <ellipse cx="110" cy="100" rx="28" ry="20" fill="#fde68a"/>
+
+          <!-- Ojos, nariz y boca -->
+          ${eyesSVG}
+          <ellipse cx="110" cy="91" rx="6" ry="4" fill="#451a03"/>
+          ${mouthSVG}
+
+          ${headGearSVG}
+        </svg>
+      `;
+    }
+
+    function renderPetSVG(petId = state.equippedPet, happy = false) {
+      const animClass = happy ? 'anim-pet-happy' : 'anim-pet-idle';
+      const xp = state.petXp[petId] || 0;
+      const petLevel = Math.min(5, Math.floor(xp / 30) + 1);
+
+      let art = '';
+      if (petId === 'toucan') {
+        art = `
+          <ellipse cx="50" cy="62" rx="22" ry="26" fill="#1e293b"/>
+          <ellipse cx="50" cy="54" rx="15" ry="14" fill="#fef08a"/>
+          <path d="M58 42 Q92 40 90 54 Q72 58 58 52 Z" fill="#f97316" stroke="#9a3412" stroke-width="2"/>
+          <path d="M80 42 Q92 43 90 54 L80 54 Z" fill="#ef4444"/>
+          <circle cx="52" cy="45" r="5" fill="#ffffff"/><circle cx="53" cy="45" r="2.5" fill="#0f172a"/>
+        `;
+      } else if (petId === 'parrot') {
+        art = `
+          <ellipse cx="50" cy="60" rx="20" ry="26" fill="#ef4444"/>
+          <path d="M32 58 Q22 72 36 78 Z" fill="#3b82f6"/>
+          <path d="M68 58 Q78 72 64 78 Z" fill="#facc15"/>
+          <circle cx="50" cy="42" r="15" fill="#ef4444"/>
+          <path d="M54 42 Q68 42 64 52 Q56 52 54 46 Z" fill="#facc15"/>
+          <circle cx="48" cy="40" r="5" fill="#ffffff"/><circle cx="49" cy="40" r="2.5" fill="#0f172a"/>
+        `;
+      } else if (petId === 'frog') {
+        art = `
+          <ellipse cx="50" cy="64" rx="28" ry="22" fill="#22c55e" stroke="#15803d" stroke-width="2.5"/>
+          <ellipse cx="50" cy="68" rx="18" ry="13" fill="#bbf7d0"/>
+          <circle cx="38" cy="42" r="9" fill="#22c55e"/><circle cx="62" cy="42" r="9" fill="#22c55e"/>
+          <circle cx="38" cy="42" r="5" fill="#ffffff"/><circle cx="62" cy="42" r="5" fill="#ffffff"/>
+          <circle cx="38" cy="42" r="2.5" fill="#0f172a"/><circle cx="62" cy="42" r="2.5" fill="#0f172a"/>
+          <path d="M40 60 Q50 68 60 60" stroke="#14532d" stroke-width="3" fill="none" stroke-linecap="round"/>
+        `;
+      } else if (petId === 'turtle') {
+        art = `
+          <path d="M24 68 A26 24 0 0 1 76 68 Z" fill="#15803d" stroke="#14532d" stroke-width="2.5"/>
+          <circle cx="50" cy="54" r="9" fill="#4ade80"/><circle cx="36" cy="60" r="7" fill="#4ade80"/><circle cx="64" cy="60" r="7" fill="#4ade80"/>
+          <circle cx="80" cy="60" r="11" fill="#86efac" stroke="#15803d" stroke-width="2"/>
+          <circle cx="83" cy="58" r="2.5" fill="#0f172a"/>
+        `;
+      } else {
+        art = `
+          <ellipse cx="38" cy="40" rx="12" ry="8" fill="rgba(255,255,255,0.85)" stroke="#38bdf8" stroke-width="2"/>
+          <ellipse cx="62" cy="40" rx="12" ry="8" fill="rgba(255,255,255,0.85)" stroke="#38bdf8" stroke-width="2"/>
+          <ellipse cx="50" cy="60" rx="22" ry="17" fill="#facc15" stroke="#713f12" stroke-width="2.5"/>
+          <rect x="40" y="45" width="6" height="30" fill="#1e293b"/>
+          <rect x="54" y="45" width="6" height="30" fill="#1e293b"/>
+          <circle cx="66" cy="56" r="3" fill="#0f172a"/>
+        `;
+      }
+
+      return `
+        <svg class="w-full h-full overflow-visible ${animClass}" viewBox="0 0 100 100">
+          ${art}
+          <rect x="28" y="84" width="44" height="14" rx="7" fill="#facc15" stroke="#854d0e" stroke-width="1.5"/>
+          <text x="50" y="94" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#451a03">Nv.${petLevel}</text>
+        </svg>
+      `;
+    }
+
+    function updateAllCharacterStages(mood = 'idle', petHappy = false) {
+      const mHTML = renderMonkeySVG(mood);
+      const pHTML = renderPetSVG(state.equippedPet, petHappy);
+      ['menuMonkeyStage', 'gameMonkeyStage', 'shopPreviewMonkey', 'victoryMonkeyStage'].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = mHTML;
+      });
+      ['menuPetStage', 'gamePetStage', 'victoryPetStage'].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = pHTML;
+      });
+    }
+
+    function monkeyTickle() {
+      SFX.pop();
+      updateAllCharacterStages('happy', true);
+      speak("¡Jajaja! ¡Qué cosquillas!");
+      setTimeout(() => updateAllCharacterStages('idle', false), 1400);
+    }
+
+    function petTickle() {
+      SFX.chime();
+      updateAllCharacterStages('idle', true);
+      setTimeout(() => updateAllCharacterStages('idle', false), 1400);
+    }
+
+    /* ============================================================================
+       6. SISTEMA DE PARTÍCULAS (CONFETI Y LLUVIA DE BANANAS EN CANVAS)
+       ============================================================================ */
+    const fxCanvas = document.getElementById('fxCanvas');
+    const fxCtx = fxCanvas.getContext('2d');
+    let particles = [];
+
+    function resizeFxCanvas() {
+      fxCanvas.width = window.innerWidth;
+      fxCanvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeFxCanvas);
+    resizeFxCanvas();
+
+    function spawnConfetti(count = 65) {
+      const colors = ['#facc15', '#22c55e', '#38bdf8', '#f43f5e', '#a855f7', '#fb923c'];
+      for (let i = 0; i < count; i++) {
+        particles.push({
+          type: 'confetti',
+          x: fxCanvas.width * (0.2 + Math.random() * 0.6),
+          y: fxCanvas.height * 0.35,
+          vx: (Math.random() - 0.5) * 14,
+          vy: -Math.random() * 12 - 4,
+          size: Math.random() * 9 + 6,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          rot: Math.random() * 360,
+          vRot: (Math.random() - 0.5) * 12,
+          life: 110 + Math.random() * 40
+        });
+      }
+    }
+
+    function spawnBananaRain(count = 35) {
+      for (let i = 0; i < count; i++) {
+        particles.push({
+          type: 'banana',
+          x: Math.random() * fxCanvas.width,
+          y: -40 - Math.random() * 300,
+          vx: (Math.random() - 0.5) * 3,
+          vy: 3.5 + Math.random() * 4.5,
+          size: 32 + Math.random() * 16,
+          rot: Math.random() * 360,
+          vRot: (Math.random() - 0.5) * 6,
+          life: 240
+        });
+      }
+    }
+
+    function animateParticles() {
+      fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.rot += p.vRot;
+        p.life--;
+
+        if (p.type === 'confetti') {
+          p.vy += 0.32; // Gravedad
+          fxCtx.save();
+          fxCtx.translate(p.x, p.y);
+          fxCtx.rotate((p.rot * Math.PI) / 180);
+          fxCtx.fillStyle = p.color;
+          fxCtx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.65);
+          fxCtx.restore();
+        } else if (p.type === 'banana') {
+          fxCtx.save();
+          fxCtx.translate(p.x, p.y);
+          fxCtx.rotate((p.rot * Math.PI) / 180);
+          fxCtx.font = `${p.size}px serif`;
+          fxCtx.textAlign = 'center';
+          fxCtx.textBaseline = 'middle';
+          fxCtx.fillText('🍌', 0, 0);
+          fxCtx.restore();
+        }
+
+        if (p.life <= 0 || p.y > fxCanvas.height + 60) {
+          particles.splice(i, 1);
+        }
+      }
+      requestAnimationFrame(animateParticles);
+    }
+
+    /* ============================================================================
+       7. LÓGICA PRINCIPAL DE JUEGO (MODO 1 Y MODO 2 + 5 NIVELES)
+       ============================================================================ */
+    let currentGame = {
+      mode: 'count', // 'count' | 'feed'
+      step: 1,
+      maxSteps: 10,
+      targetNumber: 5,
+      fedCount: 0,
+      isLocked: false,
+      roundCoins: 0,
+      timerInterval: null,
+      timeLeft: 0,
+      timeTotal: 0,
+      lastInstructionSpeech: ''
+    };
+
+    function renderLevelSelector() {
+      const container = document.getElementById('levelButtonsContainer');
+      container.innerHTML = LEVELS.map((lvl) => {
+        const active = state.selectedLevel === lvl.id;
+        return `
+          <button onclick="selectLevel(${lvl.id})"
+            class="btn-game p-2.5 rounded-2xl border-2 text-center transition-all ${
+              active
+                ? `bg-gradient-to-b ${lvl.color} text-white border-white ring-4 ring-amber-300 scale-105`
+                : 'bg-slate-100 dark:bg-slate-700 border-slate-300 dark:border-slate-600'
+            }">
+            <div class="font-bold text-base sm:text-lg">${lvl.name}</div>
+            <div class="text-xs sm:text-sm font-semibold opacity-90">${lvl.desc}</div>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function selectLevel(lvlId) {
+      SFX.pop();
+      state.selectedLevel = lvlId;
+      saveState();
+      renderLevelSelector();
+      const lvl = LEVELS.find((l) => l.id === lvlId);
+      speak(`${lvl.name}: conteo del ${lvl.desc}`);
+    }
+
+    function startGame(mode) {
+      getAudioCtx();
+      SFX.chime();
+      currentGame.mode = mode;
+      currentGame.step = 1;
+      currentGame.roundCoins = 0;
+      navigateTo('game');
+      setupNextChallenge();
+    }
+
+    function setupNextChallenge() {
+      clearInterval(currentGame.timerInterval);
+      currentGame.isLocked = false;
+      currentGame.fedCount = 0;
+
+      const lvl = LEVELS.find((l) => l.id === state.selectedLevel) || LEVELS[0];
+      currentGame.targetNumber = Math.floor(Math.random() * (lvl.max - lvl.min + 1)) + lvl.min;
+
+      document.getElementById('gameModeBadge').textContent = `${lvl.name} • ${currentGame.mode === 'count' ? 'Contar' : 'Alimentar'}`;
+      document.getElementById('roundStepText').textContent = currentGame.step;
+      updateAllCharacterStages('idle', false);
+
+      const board = document.getElementById('bananasBoard');
+      const mode1Opts = document.getElementById('mode1Options');
+      const mode2Ctrl = document.getElementById('mode2Controls');
+      const plateBox = document.getElementById('feedingPlateContainer');
+
+      if (currentGame.mode === 'count') {
+        mode1Opts.classList.remove('hidden');
+        mode2Ctrl.classList.add('hidden');
+        plateBox.classList.add('hidden');
+
+        document.getElementById('instructionText').textContent = '¿Cuántas bananas ves?';
+        document.getElementById('monkeySpeechBubble').textContent = '¡Ayúdame a contarlas! 🍌';
+
+        // Renderizar bananas (agrupadas en bloques de 5 si son > 10 para facilitar conteo visual)
+        const sizeCls = currentGame.targetNumber > 12 ? 'w-11 h-11 sm:w-14 sm:h-14' : 'w-14 h-14 sm:w-16 sm:h-16';
+        let bananasHTML = '';
+        for (let i = 0; i < currentGame.targetNumber; i++) {
+          bananasHTML += `
+            <div id="board-banana-${i}" onclick="tapSingleBananaCount(${i})"
+              class="banana-item cursor-pointer p-1 rounded-2xl hover:bg-yellow-200/60"
+              style="animation-delay: ${i * (lvl.id === 4 ? 0.03 : 0.06)}s">
+              ${renderBananaSVG(sizeCls)}
+            </div>
+          `;
+        }
+        board.innerHTML = bananasHTML;
+
+        // Generar 3 opciones numéricas distintas
+        const choices = generateOptions(currentGame.targetNumber, lvl.min, lvl.max);
+        mode1Opts.innerHTML = choices.map((num) => `
+          <button onclick="checkCountAnswer(${num})"
+            class="btn-game bg-gradient-to-b from-sky-400 to-blue-600 text-white font-bold text-4xl sm:text-5xl py-5 sm:py-6 rounded-3xl border-4 border-sky-200 shadow-lg">
+            ${num}
+          </button>
+        `).join('');
+
+        currentGame.lastInstructionSpeech = "¿Cuántas bananas ves?";
+        speak(currentGame.lastInstructionSpeech);
+
+      } else {
+        // MODO 2: ALIMENTA AL MONO
+        mode1Opts.classList.add('hidden');
+        mode2Ctrl.classList.remove('hidden');
+        plateBox.classList.remove('hidden');
+
+        const n = currentGame.targetNumber;
+        const word = NUMBER_WORDS_ES[n] || n;
+        document.getElementById('instructionText').textContent = `Da de comer ${n} ${n === 1 ? 'banana' : 'bananas'} al mono`;
+        document.getElementById('monkeySpeechBubble').textContent = `¡Quiero comer ${n} ${n === 1 ? 'banana' : 'bananas'}! 😋`;
+        updatePlateUI();
+
+        // Mostrar un grupo abundante de bananas (entre n+3 y max+4, tope 22)
+        const poolCount = Math.min(22, Math.max(n + 3, Math.min(lvl.max + 2, 16)));
+        const sizeCls = poolCount > 14 ? 'w-12 h-12 sm:w-14 sm:h-14' : 'w-14 h-14 sm:w-16 sm:h-16';
+        let poolHTML = '';
+        for (let i = 0; i < poolCount; i++) {
+          poolHTML += `
+            <div id="pool-banana-${i}" draggable="true"
+              class="banana-item cursor-grab active:cursor-grabbing p-1 rounded-2xl hover:bg-yellow-200/70"
+              style="animation-delay: ${i * 0.04}s">
+              ${renderBananaSVG(sizeCls)}
+            </div>
+          `;
+        }
+        board.innerHTML = poolHTML;
+        attachFeedInteractions(poolCount);
+
+        currentGame.lastInstructionSpeech = `Arrastra ${word} ${n === 1 ? 'banana' : 'bananas'} al mono`;
+        speak(currentGame.lastInstructionSpeech);
+      }
+
+      // Temporizador para Niveles 4 y 5
+      const timerWrap = document.getElementById('timerWrapper');
+      if (lvl.timeLimit > 0) {
+        timerWrap.classList.remove('hidden');
+        currentGame.timeTotal = lvl.timeLimit;
+        currentGame.timeLeft = lvl.timeLimit;
+        updateTimerBar();
+        currentGame.timerInterval = setInterval(() => {
+          if (currentGame.isLocked) return;
+          currentGame.timeLeft -= 0.1;
+          updateTimerBar();
+          if (currentGame.timeLeft <= 0) {
+            clearInterval(currentGame.timerInterval);
+            currentGame.timeLeft = currentGame.timeTotal;
+            speak("¡Vamos tú puedes! Tómate tu tiempo.");
+            updateTimerBar();
+          }
+        }, 100);
+      } else {
+        timerWrap.classList.add('hidden');
+      }
+    }
+
+    function updateTimerBar() {
+      const pct = Math.max(0, Math.min(100, (currentGame.timeLeft / currentGame.timeTotal) * 100));
+      document.getElementById('timerBar').style.width = pct + '%';
+    }
+
+    function repeatInstruction() {
+      SFX.pop();
+      speak(currentGame.lastInstructionSpeech);
+    }
+
+    function generateOptions(correct, min, max) {
+      const set = new Set([correct]);
+      const spreadMax = Math.max(max, correct + 3);
+      while (set.size < 3) {
+        let candidate = correct + (Math.floor(Math.random() * 5) - 2);
+        if (candidate < 1) candidate = Math.floor(Math.random() * spreadMax) + 1;
+        if (candidate > 20) candidate = 20 - Math.floor(Math.random() * 4);
+        set.add(candidate);
+      }
+      return Array.from(set).sort(() => Math.random() - 0.5);
+    }
+
+    // Tocar una banana individual en Modo 1 para ayudarse a contar
+    function tapSingleBananaCount(index) {
+      if (currentGame.isLocked) return;
+      SFX.pop();
+      const el = document.getElementById(`board-banana-${index}`);
+      if (el) {
+        el.classList.remove('banana-counting');
+        void el.offsetWidth;
+        el.classList.add('banana-counting');
+      }
+      speak(COUNT_WORDS_ES[index + 1] || String(index + 1));
+    }
+
+    // Validar respuesta en Modo 1: Contar Bananas
+    function checkCountAnswer(selected) {
+      if (currentGame.isLocked) return;
+      const target = currentGame.targetNumber;
+
+      if (selected === target) {
+        handleCorrectAnswer(
+          `¡Excelente! Son ${NUMBER_WORDS_ES[target] || target} ${target === 1 ? 'banana' : 'bananas'}.`,
+          `¡Siii! ¡Son ${target}! 🎉`
+        );
+      } else {
+        // Nunca castigar: contar juntos una por una
+        currentGame.isLocked = true;
+        SFX.gentleTryAgain();
+        updateAllCharacterStages('confused', false);
+        document.getElementById('monkeySpeechBubble').textContent = '¡Contemos juntos! 🍌';
+
+        speak("Buen intento, contemos juntos.", () => {
+          guidedCountSequence(0, target, () => {
+            currentGame.isLocked = false;
+            updateAllCharacterStages('idle', false);
+            document.getElementById('monkeySpeechBubble').textContent = '¿Ahora qué número eliges? 😊';
+          });
+        });
+      }
+    }
+
+    function guidedCountSequence(idx, total, onComplete) {
+      if (idx >= total) {
+        setTimeout(onComplete, 400);
+        return;
+      }
+      const el = document.getElementById(`board-banana-${idx}`);
+      if (el) {
+        el.classList.remove('banana-counting');
+        void el.offsetWidth;
+        el.classList.add('banana-counting');
+      }
+      SFX.pop();
+      speak(`${COUNT_WORDS_ES[idx + 1] || (idx + 1)}...`, () => {
+        setTimeout(() => guidedCountSequence(idx + 1, total, onComplete), 180);
+      });
+    }
+
+    /* ============================================================================
+       8. INTERACCIONES DE ARRASTRAR, SOLTAR Y TOCAR (MODO 2: ALIMENTA AL MONO)
+       ============================================================================ */
+    function attachFeedInteractions(poolCount) {
+      const dropZone = document.getElementById('monkeyDropZone');
+
+      // Eventos dragover / drop nativos para escritorio
+      dropZone.ondragover = (e) => {
+        e.preventDefault();
+        dropZone.classList.add('drop-zone-active');
+      };
+      dropZone.ondragleave = () => dropZone.classList.remove('drop-zone-active');
+      dropZone.ondrop = (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('drop-zone-active');
+        const id = e.dataTransfer.getData('text/plain');
+        if (id) feedBananaFromPool(id);
+      };
+
+      for (let i = 0; i < poolCount; i++) {
+        const el = document.getElementById(`pool-banana-${i}`);
+        if (!el) continue;
+
+        el.ondragstart = (e) => {
+          e.dataTransfer.setData('text/plain', el.id);
+        };
+
+        // Soporte táctil + clic directo: tocar una banana la envía volando al plato del mono
+        el.onclick = () => {
+          if (!currentGame.isLocked && !el.dataset.used) {
+            feedBananaFromPool(el.id);
+          }
+        };
+      }
+    }
+
+    function feedBananaFromPool(elementId) {
+      if (currentGame.isLocked) return;
+      const el = document.getElementById(elementId);
+      if (!el || el.dataset.used === 'true') return;
+
+      el.dataset.used = 'true';
+      el.style.opacity = '0.22';
+      el.style.pointerEvents = 'none';
+      el.style.transform = 'scale(0.8)';
+
+      currentGame.fedCount++;
+      SFX.nomNom();
+      updatePlateUI();
+
+      // Animación breve de masticar
+      updateAllCharacterStages('eat', true);
+      speak(COUNT_WORDS_ES[currentGame.fedCount] || String(currentGame.fedCount));
+
+      setTimeout(() => {
+        if (!currentGame.isLocked) updateAllCharacterStages('idle', false);
+      }, 650);
+    }
+
+    function removeOneFedBanana() {
+      if (currentGame.isLocked || currentGame.fedCount <= 0) return;
+      SFX.pop();
+      currentGame.fedCount--;
+      // Restaurar última banana usada
+      const usedEls = Array.from(document.querySelectorAll('#bananasBoard [data-used="true"]'));
+      const last = usedEls[usedEls.length - 1];
+      if (last) {
+        delete last.dataset.used;
+        last.style.opacity = '1';
+        last.style.pointerEvents = 'auto';
+        last.style.transform = 'scale(1)';
+      }
+      updatePlateUI();
+    }
+
+    function updatePlateUI() {
+      document.getElementById('fedCountBadge').textContent = currentGame.fedCount;
+      const grid = document.getElementById('plateBananasGrid');
+      if (currentGame.fedCount === 0) {
+        grid.innerHTML = `<span class="text-xs text-slate-400 italic">Arrastra o toca bananas aquí</span>`;
+      } else {
+        grid.innerHTML = Array.from({ length: currentGame.fedCount })
+          .map(() => `<span class="text-2xl sm:text-3xl animate-bounce">🍌</span>`)
+          .join('');
+      }
+    }
+
+    function validateFeeding() {
+      if (currentGame.isLocked) return;
+      const target = currentGame.targetNumber;
+      const fed = currentGame.fedCount;
+
+      if (fed === target) {
+        handleCorrectAnswer(
+          "¡Perfecto! Al mono le encantó la comida. Qué gran contador eres.",
+          "¡Ñam, ñam! ¡Estuvo delicioso! 😋"
+        );
+      } else if (fed < target) {
+        const missing = target - fed;
+        SFX.gentleTryAgain();
+        updateAllCharacterStages('confused', false);
+        document.getElementById('monkeySpeechBubble').textContent = `¡Faltan ${missing}! Puse ${fed} y quiero ${target} 🍌`;
+        speak(`Aquí hay ${fed}. El mono pidió ${target}. ¡Pon ${missing} más!`);
+      } else {
+        const extra = fed - target;
+        SFX.gentleTryAgain();
+        updateAllCharacterStages('confused', false);
+        document.getElementById('monkeySpeechBubble').textContent = `¡Hay ${extra} de más! Quita ${extra} banana 🙈`;
+        speak(`¡Uy! Hay ${fed} bananas y el mono solo pidió ${target}. Quita ${extra}.`);
+      }
+    }
+
+    /* ============================================================================
+       9. RECOMPENSAS, COFRES SORPRESA, LOGROS Y VICTORIA
+       ============================================================================ */
+    function handleCorrectAnswer(voicePhrase, bubbleText) {
+      currentGame.isLocked = true;
+      clearInterval(currentGame.timerInterval);
+
+      SFX.chime();
+      setTimeout(() => SFX.nomNom(), 300);
+      spawnConfetti(60);
+
+      updateAllCharacterStages('happy', true);
+      document.getElementById('monkeySpeechBubble').textContent = bubbleText;
+
+      // Recompensa: +10 Bananacoins + XP para mascota activa
+      const earned = 10;
+      state.coins += earned;
+      currentGame.roundCoins += earned;
+      state.totalCorrect += 1;
+      state.chestProgress += 1;
+      state.petXp[state.equippedPet] = (state.petXp[state.equippedPet] || 0) + 10;
+
+      checkAchievements();
+      saveState();
+
+      speak(voicePhrase, () => {
+        setTimeout(() => {
+          if (state.chestProgress >= 5) {
+            state.chestProgress = 0;
+            saveState();
+            openChestModal();
+          } else {
+            advanceRoundOrVictory();
+          }
+        }, 650);
+      });
+    }
+
+    function advanceRoundOrVictory() {
+      if (currentGame.step >= currentGame.maxSteps) {
+        showVictoryScreen();
+      } else {
+        currentGame.step += 1;
+        setupNextChallenge();
+      }
+    }
+
+    // Cofre Sorpresa
+    function openChestModal() {
+      const modal = document.getElementById('chestModal');
+      document.getElementById('chestInteractiveBox').textContent = '🧰';
+      document.getElementById('chestInteractiveBox').classList.add('chest-shake');
+      document.getElementById('chestRewardResult').classList.add('hidden');
+      document.getElementById('btnCloseChest').classList.add('hidden');
+      modal.classList.remove('hidden');
+      speak("¡Felicidades! ¡Ganaste un cofre sorpresa! Tócalo para abrirlo.");
+    }
+
+    function openSurpriseChest() {
+      const resBox = document.getElementById('chestRewardResult');
+      if (!resBox.classList.contains('hidden')) return;
+
+      SFX.fanfare();
+      spawnConfetti(80);
+      document.getElementById('chestInteractiveBox').textContent = '🎊';
+      document.getElementById('chestInteractiveBox').classList.remove('chest-shake');
+
+      const rewards = [
+        { icon: '🍌', text: '+30 Bananacoins Extra', apply: () => { state.coins += 30; } },
+        { icon: '⭐', text: '+2 Estrellas Doradas', apply: () => { state.stars += 2; } },
+        { icon: '🍌⭐', text: '+20 Bananacoins y +1 Estrella', apply: () => { state.coins += 20; state.stars += 1; } }
+      ];
+      const pick = rewards[Math.floor(Math.random() * rewards.length)];
+      pick.apply();
+      saveState();
+
+      document.getElementById('chestRewardIcon').textContent = pick.icon;
+      document.getElementById('chestRewardText').textContent = pick.text;
+      resBox.classList.remove('hidden');
+      document.getElementById('btnCloseChest').classList.remove('hidden');
+      speak(`¡Sorpresa! Ganaste ${pick.text}`);
+    }
+
+    function closeChestModal() {
+      SFX.pop();
+      document.getElementById('chestModal').classList.add('hidden');
+      advanceRoundOrVictory();
+    }
+
+    // Pantalla de Victoria Épica
+    function showVictoryScreen() {
+      SFX.fanfare();
+      spawnConfetti(110);
+      spawnBananaRain(40);
+
+      state.stars += 3;
+      state.roundsCompleted += 1;
+      checkAchievements();
+      saveState();
+
+      updateAllCharacterStages('happy', true);
+      document.getElementById('victoryCoinsEarned').textContent = `+${currentGame.roundCoins} 🍌`;
+      document.getElementById('victoryStarsEarned').textContent = `+3 ⭐`;
+      document.getElementById('victoryModal').classList.remove('hidden');
+
+      speak("¡Increíble! Has ayudado al mono a comer todas sus bananas. ¡Eres un gran contador!");
+    }
+
+    function playAgainSameMode() {
+      SFX.pop();
+      document.getElementById('victoryModal').classList.add('hidden');
+      startGame(currentGame.mode);
+    }
+
+    function closeVictoryToMenu() {
+      SFX.pop();
+      document.getElementById('victoryModal').classList.add('hidden');
+      navigateTo('menu');
+    }
+
+    // Logros
+    function checkAchievements() {
+      ACHIEVEMENTS.forEach((ach) => {
+        if (!state.unlockedAchievements.includes(ach.id) && ach.check(state)) {
+          state.unlockedAchievements.push(ach.id);
+          showToast(ach.icon, '¡Nuevo Logro Desbloqueado!', ach.name);
+        }
+      });
+    }
+
+    let toastTimeout = null;
+    function showToast(icon, title, body) {
+      const toast = document.getElementById('toastBanner');
+      document.getElementById('toastIcon').textContent = icon;
+      document.getElementById('toastTitle').textContent = title;
+      document.getElementById('toastBody').textContent = body;
+      toast.classList.remove('opacity-0', 'translate-y-4');
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-4');
+      }, 3400);
+    }
+
+    /* ============================================================================
+       10. TIENDA, MASCOTAS, LOGROS Y NAVEGACIÓN DE VISTAS
+       ============================================================================ */
+    let currentShopTab = 'monkeys';
+
+    function navigateTo(viewName) {
+      clearInterval(currentGame.timerInterval);
+      ['menu', 'game', 'shop', 'pets', 'achievements'].forEach((v) => {
+        const el = document.getElementById(`view-${v}`);
+        if (el) el.classList.add('hidden');
+        if (el) el.classList.remove('flex');
+      });
+      const target = document.getElementById(`view-${viewName}`);
+      if (target) {
+        target.classList.remove('hidden');
+        target.classList.add('flex');
+      }
+
+      updateAllCharacterStages('idle', false);
+      if (viewName === 'shop') renderShop();
+      if (viewName === 'pets') renderPetsAlbum();
+      if (viewName === 'achievements') renderAchievements();
+    }
+
+    function switchShopTab(tab) {
+      SFX.pop();
+      currentShopTab = tab;
+      document.getElementById('tabMonkeys').className = `btn-game flex-1 py-2.5 rounded-2xl font-bold text-lg ${tab === 'monkeys' ? 'bg-pink-500 text-white' : 'bg-slate-200 dark:bg-slate-700'}`;
+      document.getElementById('tabAccessories').className = `btn-game flex-1 py-2.5 rounded-2xl font-bold text-lg ${tab === 'accessories' ? 'bg-pink-500 text-white' : 'bg-slate-200 dark:bg-slate-700'}`;
+      renderShop();
+    }
+
+    function renderShop() {
+      const outfitObj = MONKEY_OUTFITS.find((m) => m.id === state.equippedMonkey);
+      const accObj = ACCESSORIES.find((a) => a.id === state.equippedAccessory);
+      document.getElementById('shopActiveOutfitName').textContent =
+        `${outfitObj ? outfitObj.name : 'Mono'} + ${accObj && accObj.id !== 'none' ? accObj.name : 'Sin accesorio'}`;
+      updateAllCharacterStages('happy', false);
+
+      const grid = document.getElementById('shopItemsGrid');
+      if (currentShopTab === 'monkeys') {
+        grid.innerHTML = MONKEY_OUTFITS.map((item) => {
+          const unlocked = state.unlockedMonkeys.includes(item.id);
+          const equipped = state.equippedMonkey === item.id;
+          return `
+            <div class="bg-amber-50 dark:bg-slate-700/80 rounded-3xl p-3.5 border-2 ${equipped ? 'border-emerald-500 ring-4 ring-emerald-300' : 'border-amber-300'} flex flex-col items-center text-center justify-between">
+              <div class="w-24 h-24">${renderMonkeySVG('idle', item.id, state.equippedAccessory)}</div>
+              <div class="font-bold text-base sm:text-lg mt-1">${item.name}</div>
+              <p class="text-xs text-slate-500 dark:text-slate-300 mb-2">${item.desc}</p>
+              ${
+                equipped
+                  ? `<span class="w-full py-2 rounded-xl bg-emerald-500 text-white font-bold text-sm">✅ Equipado</span>`
+                  : unlocked
+                  ? `<button onclick="equipMonkey('${item.id}')" class="btn-game w-full py-2 rounded-xl bg-sky-500 text-white font-bold text-sm">Usar Traje</button>`
+                  : `<button onclick="buyMonkey('${item.id}', ${item.price})" class="btn-game w-full py-2 rounded-xl bg-amber-400 text-amber-950 font-bold text-sm">🍌 ${item.price}</button>`
+              }
+            </div>
+          `;
+        }).join('');
+      } else {
+        grid.innerHTML = ACCESSORIES.map((item) => {
+          const unlocked = state.unlockedAccessories.includes(item.id);
+          const equipped = state.equippedAccessory === item.id;
+          return `
+            <div class="bg-amber-50 dark:bg-slate-700/80 rounded-3xl p-3.5 border-2 ${equipped ? 'border-emerald-500 ring-4 ring-emerald-300' : 'border-amber-300'} flex flex-col items-center text-center justify-between">
+              <div class="text-5xl my-2">${item.icon}</div>
+              <div class="font-bold text-base sm:text-lg">${item.name}</div>
+              ${
+                equipped
+                  ? `<span class="mt-2 w-full py-2 rounded-xl bg-emerald-500 text-white font-bold text-sm">✅ Puesto</span>`
+                  : unlocked
+                  ? `<button onclick="equipAccessory('${item.id}')" class="btn-game mt-2 w-full py-2 rounded-xl bg-sky-500 text-white font-bold text-sm">Poner</button>`
+                  : `<button onclick="buyAccessory('${item.id}', ${item.price})" class="btn-game mt-2 w-full py-2 rounded-xl bg-amber-400 text-amber-950 font-bold text-sm">🍌 ${item.price}</button>`
+              }
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    function buyMonkey(id, price) {
+      if (state.coins < price) {
+        SFX.gentleTryAgain();
+        speak(`Necesitas ${price} monedas banana. ¡Sigue jugando para ganar más!`);
+        return;
+      }
+      state.coins -= price;
+      state.unlockedMonkeys.push(id);
+      state.equippedMonkey = id;
+      SFX.fanfare();
+      spawnConfetti(45);
+      checkAchievements();
+      saveState();
+      renderShop();
+      speak("¡Genial! ¡Desbloqueaste un nuevo mono!");
+    }
+
+    function equipMonkey(id) {
+      SFX.pop();
+      state.equippedMonkey = id;
+      saveState();
+      renderShop();
+    }
+
+    function buyAccessory(id, price) {
+      if (state.coins < price) {
+        SFX.gentleTryAgain();
+        speak(`Necesitas ${price} monedas banana. ¡Tú puedes!`);
+        return;
+      }
+      state.coins -= price;
+      state.unlockedAccessories.push(id);
+      state.equippedAccessory = id;
+      SFX.chime();
+      spawnConfetti(35);
+      checkAchievements();
+      saveState();
+      renderShop();
+      speak("¡Qué bien se ve ese accesorio!");
+    }
+
+    function equipAccessory(id) {
+      SFX.pop();
+      state.equippedAccessory = id;
+      saveState();
+      renderShop();
+    }
+
+    function renderPetsAlbum() {
+      const grid = document.getElementById('petsGrid');
+      grid.innerHTML = PETS.map((pet) => {
+        const unlocked = state.unlockedPets.includes(pet.id);
+        const equipped = state.equippedPet === pet.id;
+        const xp = state.petXp[pet.id] || 0;
+        const lvl = Math.min(5, Math.floor(xp / 30) + 1);
+        return `
+          <div class="bg-cyan-50 dark:bg-slate-700/80 rounded-3xl p-4 border-2 ${equipped ? 'border-emerald-500 ring-4 ring-emerald-300' : 'border-cyan-300'} flex flex-col items-center text-center justify-between">
+            <div class="w-28 h-28">${renderPetSVG(pet.id, equipped)}</div>
+            <div class="font-bold text-lg mt-1">${pet.emoji} ${pet.name}</div>
+            <div class="text-xs font-bold text-cyan-700 dark:text-cyan-300">Nivel ${lvl} • ${xp} XP</div>
+            <p class="text-xs text-slate-500 dark:text-slate-300 my-1.5">${pet.perk}</p>
+            ${
+              equipped
+                ? `<span class="w-full py-2 rounded-xl bg-emerald-500 text-white font-bold text-sm">✅ Acompañando</span>`
+                : unlocked
+                ? `<button onclick="equipPet('${pet.id}')" class="btn-game w-full py-2 rounded-xl bg-cyan-500 text-white font-bold text-sm">Llevar conmigo</button>`
+                : `<button onclick="adoptPet('${pet.id}', ${pet.price})" class="btn-game w-full py-2 rounded-xl bg-amber-400 text-amber-950 font-bold text-sm">Adoptar • 🍌 ${pet.price}</button>`
+            }
+          </div>
+        `;
+      }).join('');
+    }
+
+    function adoptPet(id, price) {
+      if (state.coins < price) {
+        SFX.gentleTryAgain();
+        speak(`Necesitas ${price} monedas banana para adoptar esta mascota.`);
+        return;
+      }
+      state.coins -= price;
+      state.unlockedPets.push(id);
+      state.equippedPet = id;
+      SFX.fanfare();
+      spawnConfetti(50);
+      checkAchievements();
+      saveState();
+      renderPetsAlbum();
+      speak("¡Yay! ¡Adoptaste una nueva mascota!");
+    }
+
+    function equipPet(id) {
+      SFX.pop();
+      state.equippedPet = id;
+      saveState();
+      renderPetsAlbum();
+    }
+
+    function renderAchievements() {
+      const grid = document.getElementById('achievementsGrid');
+      grid.innerHTML = ACHIEVEMENTS.map((ach) => {
+        const done = state.unlockedAchievements.includes(ach.id);
+        return `
+          <div class="p-4 rounded-3xl border-2 flex items-center gap-4 ${
+            done
+              ? 'bg-gradient-to-r from-yellow-100 to-amber-100 dark:from-slate-700 dark:to-amber-950/50 border-amber-400'
+              : 'bg-slate-100/80 dark:bg-slate-800/60 border-slate-300 dark:border-slate-700 opacity-65'
+          }">
+            <div class="text-4xl sm:text-5xl bg-white/80 dark:bg-slate-800 p-3 rounded-2xl shadow-sm">
+              ${done ? ach.icon : '🔒'}
+            </div>
+            <div>
+              <div class="font-bold text-lg">${ach.name}</div>
+              <div class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">${ach.desc}</div>
+              <div class="text-xs font-bold mt-1 ${done ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}">
+                ${done ? '✅ ¡Completado!' : 'Sigue jugando para desbloquear'}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    /* ============================================================================
+       11. HUD SUPERIOR, MODO NOCTURNO Y PANTALLA COMPLETA
+       ============================================================================ */
+    function updateTopHUD() {
+      document.getElementById('coinsDisplay').textContent = state.coins;
+      document.getElementById('starsDisplay').textContent = state.stars;
+      document.getElementById('streakDisplay').textContent = state.streak;
+
+      const pct = Math.min(100, (state.chestProgress / 5) * 100);
+      document.getElementById('chestProgressBar').style.width = pct + '%';
+      document.getElementById('chestProgressText').textContent = `${state.chestProgress}/5`;
+
+      document.getElementById('btnVoiceToggle').textContent = state.voiceEnabled ? '🔊' : '🔇';
+      document.getElementById('btnThemeToggle').textContent = state.darkMode ? '☀️' : '🌙';
+    }
+
+    function applyTheme() {
+      const body = document.body;
+      const orb = document.getElementById('skyOrb');
+      const fireflies = document.getElementById('firefliesLayer');
+
+      if (state.darkMode) {
+        body.classList.add('dark-jungle');
+        orb.className = 'absolute top-6 right-8 w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-slate-100 shadow-[0_0_45px_#e2e8f0] transition-all duration-700';
+        fireflies.classList.remove('hidden');
+      } else {
+        body.classList.remove('dark-jungle');
+        orb.className = 'absolute top-6 right-8 w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-yellow-300 shadow-[0_0_50px_#fde047] transition-all duration-700';
+        fireflies.classList.add('hidden');
+      }
+    }
+
+    function toggleTheme() {
+      SFX.pop();
+      state.darkMode = !state.darkMode;
+      saveState();
+      applyTheme();
+    }
+
+    function toggleFullScreen() {
+      SFX.pop();
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    }
+
+    // Generar luciérnagas decorativas para modo noche
+    function initFireflies() {
+      const layer = document.getElementById('firefliesLayer');
+      let html = '';
+      for (let i = 0; i < 18; i++) {
+        const left = Math.random() * 95;
+        const top = 10 + Math.random() * 75;
+        const delay = (Math.random() * 3).toFixed(2);
+        html += `<div class="absolute w-2.5 h-2.5 rounded-full bg-lime-300 shadow-[0_0_12px_#bef264]"
+                      style="left:${left}%; top:${top}%; animation: fireflyGlow 2.6s ease-in-out ${delay}s infinite;"></div>`;
+      }
+      layer.innerHTML = html;
+    }
+
+    /* ============================================================================
+       12. INICIALIZACIÓN AL CARGAR LA VENTANA
+       ============================================================================ */
+    window.onload = function () {
+      initFireflies();
+      applyTheme();
+      updateTopHUD();
+      renderLevelSelector();
+      updateAllCharacterStages('idle', false);
+      animateParticles();
+    };
+  </script>
+</body>
+</html>
